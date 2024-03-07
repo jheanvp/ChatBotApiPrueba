@@ -15,6 +15,12 @@ public class ChatBotApiPruebaApplication {
 		return "hola te saludo desde azure";
 	}
 
+
+	@GetMapping("/prueba2")
+	public String mensaje2(){
+		return "hola te saludo desde azure2";
+	}
+
 	public static void main(String[] args) {
 		SpringApplication.run(ChatBotApiPruebaApplication.class, args);
 	}
