@@ -20,6 +20,10 @@ public class ChatBotApiPruebaApplication {
 	public String mensaje2(){
 		return "hola te saludo desde azure2";
 	}
+	@GetMapping("/prueba3")
+	public String mensaje3(){
+		return "hola te saludo desde azure3";
+	}
 
 	public static void main(String[] args) {
 		SpringApplication.run(ChatBotApiPruebaApplication.class, args);
