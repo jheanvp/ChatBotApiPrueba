@@ -42,7 +42,7 @@ public class ControllerRest {
     }
 
 
-    @GetMapping("/prueba1")
+    @GetMapping("/prueba2")
     public String mensaje3(){
         return "hola te saludo desde azure";
     }
