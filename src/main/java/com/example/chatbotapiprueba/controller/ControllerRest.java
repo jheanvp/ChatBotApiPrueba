@@ -45,12 +45,10 @@ public class ControllerRest {
         return ResponseEntity.status(HttpStatus.OK).body(dialogFlowResponse);
     }
 
-
     @GetMapping("/prueba2")
     public String mensaje3() throws GeneralSecurityException, IOException {
         return googleSheetsService.obtenerurl(GoogleNetHttpTransport.newTrustedTransport());
     }
-
 
     @GetMapping("/prueba3")
     public String mensaje4() throws GeneralSecurityException, IOException {
@@ -59,4 +57,8 @@ public class ControllerRest {
         return dialogFlowResponse.getFulfillmentMessages().get(0).getText().getText().get(0);
     }
 
+    @GetMapping("/prueba4")
+    public String mensaje5(){
+        return "azureee";
+    }
 }
