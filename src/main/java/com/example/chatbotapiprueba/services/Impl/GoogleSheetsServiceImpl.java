@@ -187,7 +187,8 @@ public class GoogleSheetsServiceImpl implements IGoogleSheetsService {
                 .setDataStoreFactory(new FileDataStoreFactory(new java.io.File(TOKENS_DIRECTORY_PATH)))
                 .setAccessType("offline")
                 .build();
-        LocalServerReceiver receiver = new LocalServerReceiver.Builder().setPort(8889).build();
+        //LocalServerReceiver receiver = new LocalServerReceiver.Builder().setHost("").setPort(8889).build();
+        LocalServerReceiver receiver = new LocalServerReceiver.Builder().setHost("chatbotapiprueba.azurewebsites.net").build();
         return flow.newAuthorizationUrl().setRedirectUri(receiver.getRedirectUri()).build() ;
     }
 }
