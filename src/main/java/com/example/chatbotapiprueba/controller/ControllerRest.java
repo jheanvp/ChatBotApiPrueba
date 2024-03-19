@@ -3,7 +3,9 @@ package com.example.chatbotapiprueba.controller;
 import com.example.chatbotapiprueba.request.DialogflowRequest;
 import com.example.chatbotapiprueba.response.DialogflowResponse;
 import com.example.chatbotapiprueba.services.IDialogflowService;
+import com.example.chatbotapiprueba.services.IGoogleSheetsService;
 import com.example.chatbotapiprueba.services.IntentHandler;
+import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,10 +22,12 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 public class ControllerRest {
     private final Map<String, IntentHandler> intentHandlers;
     private final IDialogflowService dialogflowService;
+    private final IGoogleSheetsService googleSheetsService;
     @Autowired
-    public ControllerRest(Map<String, IntentHandler> intentHandlers, IDialogflowService dialogflowService) {
+    public ControllerRest(Map<String, IntentHandler> intentHandlers, IDialogflowService dialogflowService, IGoogleSheetsService googleSheetsService) {
         this.intentHandlers = intentHandlers;
         this.dialogflowService = dialogflowService;
+        this.googleSheetsService = googleSheetsService;
     }
     @PostMapping(produces = APPLICATION_JSON_VALUE)
     public ResponseEntity dialogFlow(@RequestBody DialogflowRequest request) throws GeneralSecurityException, IOException {
@@ -43,7 +47,16 @@ public class ControllerRest {
 
 
     @GetMapping("/prueba2")
-    public String mensaje3(){
-        return "hola te saludo desde azure";
+    public String mensaje3() throws GeneralSecurityException, IOException {
+        return googleSheetsService.obtenerurl(GoogleNetHttpTransport.newTrustedTransport());
     }
+
+
+    @GetMapping("/prueba3")
+    public String mensaje4() throws GeneralSecurityException, IOException {
+        DialogflowResponse dialogFlowResponse;
+        dialogFlowResponse = intentHandlers.get("estadoTaiLoyClass").handleIntent("2345");
+        return dialogFlowResponse.getFulfillmentMessages().get(0).getText().getText().get(0);
+    }
+
 }
