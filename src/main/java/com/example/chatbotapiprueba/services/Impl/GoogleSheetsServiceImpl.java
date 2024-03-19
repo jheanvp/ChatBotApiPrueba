@@ -188,7 +188,13 @@ public class GoogleSheetsServiceImpl implements IGoogleSheetsService {
                 .setAccessType("offline")
                 .build();
         //LocalServerReceiver receiver = new LocalServerReceiver.Builder().setHost("").setPort(8889).build();
-        LocalServerReceiver receiver = new LocalServerReceiver.Builder().setHost("chatbotapiprueba.azurewebsites.net").build();
+        //LocalServerReceiver receiver = new LocalServerReceiver.Builder().setHost("chatbotapiprueba.azurewebsites.net").setPort(443).setProtocol("https").build();
+        LocalServerReceiver receiver = new LocalServerReceiver.Builder()
+                .setHost("chatbotapiprueba.azurewebsites.net")
+                .setPort(443)  // Puerto HTTPS predeterminado
+                .build();
+
+        //LocalServerReceiver receiver = new LocalServerReceiver.Builder().setHost("chatbotapiprueba.azurewebsites.net").build();
         return flow.newAuthorizationUrl().setRedirectUri(receiver.getRedirectUri()).build() ;
     }
 }
