@@ -9,14 +9,13 @@ import java.io.IOException;
 import java.security.GeneralSecurityException;
 
 @Service
-public class ValidationClassno implements IntentHandler {
+public class PruebaTaiLoyClass implements IntentHandler {
     private final IDialogflowService dialogflowService;
-
-    public ValidationClassno(IDialogflowService dialogflowService) {
+    public PruebaTaiLoyClass(IDialogflowService dialogflowService) {
         this.dialogflowService = dialogflowService;
     }
     @Override
-    public DialogflowResponse handleIntent(String parametro) throws GeneralSecurityException, IOException {
-        return dialogflowService.obtenerUrl();
+    public DialogflowResponse handleIntent(String id,String accion) throws GeneralSecurityException, IOException {
+         return dialogflowService.obtenerDiasTranscurridos(id,accion);
     }
 }

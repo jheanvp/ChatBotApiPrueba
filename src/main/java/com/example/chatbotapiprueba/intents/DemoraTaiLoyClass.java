@@ -11,12 +11,11 @@ import java.security.GeneralSecurityException;
 @Service
 public class DemoraTaiLoyClass implements IntentHandler {
     private final IDialogflowService dialogflowService;
-
     public DemoraTaiLoyClass(IDialogflowService dialogflowService) {
         this.dialogflowService = dialogflowService;
     }
     @Override
-    public DialogflowResponse handleIntent(String id) throws GeneralSecurityException, IOException {
-        return dialogflowService.obtenerDiasTranscurridos(id);
+    public DialogflowResponse handleIntent(String id,String accion) throws GeneralSecurityException, IOException {
+         return dialogflowService.obtenerDiasTranscurridos(id,accion);
     }
 }

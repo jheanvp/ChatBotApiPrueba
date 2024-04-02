@@ -1,8 +1,9 @@
 package com.example.chatbotapiprueba.services.Impl;
 
 import com.example.chatbotapiprueba.services.IGoogleSheetsService;
+import static com.example.chatbotapiprueba.util.Constants.*;
 import com.google.api.client.auth.oauth2.Credential;
-import com.google.api.client.extensions.jetty.auth.oauth2.LocalServerReceiver;
+
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
 import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
@@ -14,14 +15,13 @@ import com.google.api.client.util.store.FileDataStoreFactory;
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.SheetsScopes;
 import com.google.api.services.sheets.v4.model.ValueRange;
+import com.google.auth.oauth2.GoogleCredentials;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.security.GeneralSecurityException;
+import java.sql.SQLOutput;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
@@ -31,7 +31,7 @@ import java.util.List;
 @Service
 public class GoogleSheetsServiceImpl implements IGoogleSheetsService {
     @Value("${google.token.actualizacion}")
-    public String tokenActualizacion;
+    private String tokenactualizacion;
     @Value("${google.token}")
     public String token;
 
@@ -42,80 +42,13 @@ public class GoogleSheetsServiceImpl implements IGoogleSheetsService {
     private static final List<String> SCOPES =
             Collections.singletonList(SheetsScopes.SPREADSHEETS_READONLY);
     private static final String CREDENTIALS_FILE_PATH = "/credentials.json";
-    public int encontrarFila(Object[][] matriz, String id) {
-        for (int i = 1; i < matriz.length; i++) {
-            if (matriz[i][0].equals(id)) {
-                return i;
-            }
-        }
-        return -1;
-    }
-
-    public String obtenerInformacion(int fila, Object[][] matriz, String id,Integer columna) {
-        String fechaProporcionada;
-        String respuesta;
-        String resultadoBusqueda= (String) matriz[fila][columna];
-        if (columna.equals(3) && resultadoBusqueda != null && !resultadoBusqueda.isEmpty()) {
-            respuesta = "El estado para el pedido *" + id + "* es : *" + resultadoBusqueda+"* ⏳ y\n"+
-                    "se encuentra en este estado desde el *" + matriz[fila][4] +"* "+ "\uD83D\uDE9A";
-        } else if (columna.equals(4) && resultadoBusqueda != null && !resultadoBusqueda.isEmpty()) {
-            fechaProporcionada = resultadoBusqueda;
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d/M/yyyy");
-            LocalDate fecha = LocalDate.parse(fechaProporcionada, formatter);
-            long diasTranscurridos = ChronoUnit.DAYS.between(fecha, LocalDate.now());
-            respuesta = "El pedido *" + id + "* lleva *" +diasTranscurridos+"* ⏳ días en proceso";
-        } else if (columna.equals(6) && resultadoBusqueda != null && !resultadoBusqueda.isEmpty()) {
-            respuesta = "El Comentario para el pedido *" + id + "* es : *" + resultadoBusqueda+"* \uD83D\uDCAC ";
-        }else {
-            respuesta = "No se encontró información para el pedido *" + id+"*";
-        }
-        return respuesta;
-    }
-    @Override
-    public String busquedaEstado(String id) throws GeneralSecurityException, IOException {
-        Object[][] matrizData = getDataSheet();
-        int fila = encontrarFila(matrizData, id);
-        if (fila==-1){
-            return "El pedido *" + id+"* no existe en la base de datos";
-        }
-        return obtenerInformacion(fila, matrizData, id,3);
-    }
-
-    @Override
-    public String busquedaDemora(String id) throws GeneralSecurityException, IOException {
-        Object[][] matrizData = getDataSheet();
-        int fila = encontrarFila(matrizData, id);
-        if (fila==-1){
-            return "El pedido *" + id+"* no existe en la base de datos";
-        }
-        return obtenerInformacion(fila, matrizData, id,4);
-    }
-    @Override
-    public String busquedaComentario(String id) throws GeneralSecurityException, IOException {
-        Object[][] matrizData = getDataSheet();
-        int fila = encontrarFila(matrizData, id);
-        if (fila==-1){
-            return "El pedido *" + id+"* no existe en la base de datos";
-        }
-        return obtenerInformacion(fila, matrizData, id,6);
-    }
-
-
 
     private Credential getCredentials(final NetHttpTransport HTTP_TRANSPORT) throws IOException {
-
         InputStream in = GoogleSheetsServiceImpl.class.getResourceAsStream(CREDENTIALS_FILE_PATH);
         if (in == null) {
             throw new FileNotFoundException("Resource not found: " + CREDENTIALS_FILE_PATH);
         }
         GoogleClientSecrets clientSecrets = GoogleClientSecrets.load(JSON_FACTORY, new InputStreamReader(in));
-
-        GoogleAuthorizationCodeFlow flow = new GoogleAuthorizationCodeFlow.Builder(
-                HTTP_TRANSPORT, JSON_FACTORY, clientSecrets, SCOPES)
-                .setDataStoreFactory(new FileDataStoreFactory(new java.io.File(TOKENS_DIRECTORY_PATH)))
-                .setAccessType("offline")
-                .build();
-
         GoogleCredential credential = new GoogleCredential.Builder()
                 .setJsonFactory(JSON_FACTORY)
                 .setTransport(HTTP_TRANSPORT)
@@ -123,86 +56,132 @@ public class GoogleSheetsServiceImpl implements IGoogleSheetsService {
                 .build();
 
         credential.setAccessToken(token);
-        credential.setRefreshToken(tokenActualizacion);
+        credential.setRefreshToken(tokenactualizacion);
 
         try {
             credential.refreshToken();
         } catch (IOException e) {
             e.printStackTrace();
         }
-
 //        System.out.println("Credenciales existentes:");
 //        System.out.println("Token de acceso: " + credential.getAccessToken());
 //        System.out.println("Token de actualización: " + credential.getRefreshToken());
-
         return credential;
     }
-    public Object[][] getDataSheet() throws GeneralSecurityException, IOException {
-        int numRows;
-        int maxNumCols;
+    public Sheets ObtenerSheet() throws GeneralSecurityException, IOException {
         final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
+        return  new Sheets.Builder(HTTP_TRANSPORT, JSON_FACTORY, getCredentials(HTTP_TRANSPORT))
+                .setApplicationName(APPLICATION_NAME)
+                .build();
+    }
+
+    public List<Object> obtenerFila(String parametro) throws GeneralSecurityException, IOException {
         final String spreadsheetId = "1QFp2jjezMXGsiH_LjTNr60zCt3HJ7OW1zTTVu8S-80s";
-        final String range = "pedidos!A1:H134";
-        Sheets service =
-                new Sheets.Builder(HTTP_TRANSPORT, JSON_FACTORY, getCredentials(HTTP_TRANSPORT))
-                        .setApplicationName(APPLICATION_NAME)
-                        .build();
+        final String range = "pedidos!A1:J134";
+        ValueRange rowResponse = null;
+        Sheets service = ObtenerSheet();
         ValueRange response = service.spreadsheets().values()
                 .get(spreadsheetId, range)
                 .execute();
         List<List<Object>> values = response.getValues();
-        Object[][] matrizData = new Object[0][];
-        if (values == null || values.isEmpty()) {
-            System.out.println("no hay datos");
-        } else {
-            numRows = values.size();
-            maxNumCols = 0;
-            for (List<Object> row : values) {
-                if (row.size() > maxNumCols) {
-                    maxNumCols = row.size();
-                }
-            }
-            matrizData = new Object[numRows][maxNumCols];
-            for (int i = 0; i < numRows; i++) {
+        boolean found = false;
+        if (values != null && !values.isEmpty()) {
+            for (int i = 0; i < values.size(); i++) {
                 List<Object> row = values.get(i);
-                for (int j = 0; j < row.size(); j++) {
-                    matrizData[i][j] = row.get(j);
+                if ( row != null &&!row.isEmpty() && row.get(0).toString().equals(parametro)) {
+                    String fullRange = "pedidos!A" + (i + 1) + ":Z" + (i + 1);
+                     rowResponse = service.spreadsheets().values()
+                            .get(spreadsheetId, fullRange)
+                            .execute();
+                    found = true;
+                    break;
                 }
             }
         }
-        return matrizData;
+        if (!found) {
+            return Collections.emptyList();
+        }
+        return rowResponse.getValues().get(0);
     }
 
-    public  String obtenerurl(final NetHttpTransport HTTP_TRANSPORT) throws IOException {
-        InputStream in = GoogleSheetsServiceImpl.class.getResourceAsStream(CREDENTIALS_FILE_PATH);
-        if (in == null) {
-            throw new FileNotFoundException("Resource not found: " + CREDENTIALS_FILE_PATH);
+    @Override
+    public String BuscarValorEnFila(String parametro,String indiceItems) throws GeneralSecurityException, IOException {
+        int indiceItem= Integer.parseInt(indiceItems);
+        DateTimeFormatter formatter;
+        String fechaEncontrada;
+        String respuesta = "Aun no existe informacion para el pedido *"+parametro+"* porfavor intente en unos minutos";
+        List<Object> fila = obtenerFila(parametro);
+        System.out.println(fila.size());
+        if (!fila.isEmpty()) {
+            if (indiceItem >= 0) {
+                switch (indiceItem) {
+                    case ESTADO:
+                        if (fila.get(ESTADO).toString() != null && !fila.get(ESTADO).toString().isEmpty() &&
+                                fila.get(FECHA_ESTADO).toString() != null && !fila.get(FECHA_ESTADO).toString().isEmpty()) {
+                            respuesta = "El estado para el pedido *" + parametro +
+                                    "* es : *" + fila.get(ESTADO).toString() + "* ⏳ y\n" +
+                                    "se encuentra en este estado desde el *" + fila.get(FECHA_ESTADO).toString() +
+                                    "* " + "\uD83D\uDE9A";
+                            break;
+                        } else if (fila.get(ESTADO).toString() != null && !fila.get(ESTADO).toString().isEmpty() && (
+                                fila.get(FECHA_ESTADO).toString() == null || fila.get(FECHA_ESTADO).toString().isEmpty())) {
+                            respuesta = "El estado para el pedido *" + parametro +
+                                    "* es : *" + fila.get(ESTADO).toString() + "* ⏳ y\n" +
+                                    "aun no tenemos informacion acerca de la fecha " + "\uD83D\uDE9A";
+                            break;
+
+                        } else if (fila.get(FECHA_ESTADO).toString() != null || !fila.get(FECHA_ESTADO).toString().isEmpty() && (
+                                fila.get(ESTADO).toString() == null && fila.get(ESTADO).toString().isEmpty())) {
+                            respuesta = "Aun no se tiene informacion sobre el estado para el pedido *" + parametro +
+                                    "*" + "⏳ y\n" +
+                                    "Pero inicio proceso el *" + fila.get(FECHA_ESTADO).toString() +
+                                    "* " + "\uD83D\uDE9A";
+                            break;
+                        }else {
+                            respuesta = "Aun no existe informacion de estado o fecha para el pedido*"+parametro+
+                                    "*, intente en unos minutos";
+                        }
+                        break;
+                    case FECHA_ESTADO:
+                        if (fila.get(indiceItem).toString() != null && !fila.get(indiceItem).toString().isEmpty()){
+                            fechaEncontrada = fila.get(FECHA_ESTADO).toString();
+                            formatter = DateTimeFormatter.ofPattern("d/M/yyyy");
+                            LocalDate fecha = LocalDate.parse(fechaEncontrada, formatter);
+                            long diasTranscurridos = ChronoUnit.DAYS.between(fecha, LocalDate.now());
+                            respuesta = "El pedido *" + parametro + "* lleva *" + diasTranscurridos + "* ⏳ días en proceso";
+                            break;
+                        }else {
+                            respuesta = "Aun no existe informacion de estado o fecha para el pedido*"+parametro+
+                                    "*, intente en unos minutos";
+                        }
+                        break;
+                    case COMENTARIO:
+                        if (fila.get(indiceItem).toString() != null && !fila.get(indiceItem).toString().isEmpty()){
+                            respuesta = "El Comentario para el pedido *" + parametro +
+                                    "* es : *" + fila.get(COMENTARIO).toString() + "* \uD83D\uDCAC ";
+                        }else {
+                            respuesta = "Aun no existe un comentario para el pedido*"+parametro+
+                                    "*, intente en unos minutos";
+                        }
+                        break;
+                    case REPUESTA_PEDIDO:
+                        if (fila.get(indiceItem).toString() != null && !fila.get(indiceItem).toString().isEmpty()){
+                            respuesta = "La informacion para el pedido *" + parametro +
+                                    "* es : *" + fila.get(REPUESTA_PEDIDO).toString() + "* \uD83D\uDCAC ";
+                        }else {
+                            respuesta = "Aun no existe un comentario para el pedido*"+parametro+
+                                    "*, intente en unos minutos";
+                        }
+                        break;
+                    default:
+                        respuesta="No existe esta accion, porfavor revisar nombre de accion en *Dialogflow*";
+                }
+            } //else {
+                //return "Este campo no existe en la base de datos";
+            //}
+        }else {
+            respuesta="El pedido *"+parametro+"* no existe en la base datos";
         }
-        GoogleClientSecrets clientSecrets =
-                GoogleClientSecrets.load(JSON_FACTORY, new InputStreamReader(in));
-
-        // Build flow and trigger user authorization request.
-        GoogleAuthorizationCodeFlow flow = new GoogleAuthorizationCodeFlow.Builder(
-                HTTP_TRANSPORT, JSON_FACTORY, clientSecrets, SCOPES)
-                .setDataStoreFactory(new FileDataStoreFactory(new java.io.File(TOKENS_DIRECTORY_PATH)))
-                .setAccessType("offline")
-                .build();
-        //LocalServerReceiver receiver = new LocalServerReceiver.Builder().setHost("").setPort(8889).build();
-        //LocalServerReceiver receiver = new LocalServerReceiver.Builder().setHost("chatbotapiprueba.azurewebsites.net").setPort(443).setProtocol("https").build();
-        LocalServerReceiver receiver = new LocalServerReceiver.Builder()
-                .setHost("chatbotapiprueba.azurewebsites.net")
-                .setPort(443)  // Puerto HTTPS predeterminado
-                .build();
-
-        //LocalServerReceiver receiver = new LocalServerReceiver.Builder().setHost("chatbotapiprueba.azurewebsites.net").build();
-        return flow.newAuthorizationUrl().setRedirectUri(receiver.getRedirectUri()).build() ;
+        return respuesta;
     }
 }
-
-
-
-
-
-
-
-

@@ -16,7 +16,7 @@ public class EstadoTaiLoyClass implements IntentHandler {
         this.dialogflowService = dialogflowService;
     }
     @Override
-    public DialogflowResponse handleIntent(String id) throws GeneralSecurityException, IOException {
-      return dialogflowService.obtenerEstado(id);
+    public DialogflowResponse handleIntent(String id,String accion) throws GeneralSecurityException, IOException {
+      return dialogflowService.obtenerEstado(id,accion);
     }
 }

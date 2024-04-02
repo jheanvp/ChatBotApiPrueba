@@ -1,6 +1,5 @@
 package com.example.chatbotapiprueba.intents;
 
-
 import com.example.chatbotapiprueba.response.DialogflowResponse;
 import com.example.chatbotapiprueba.services.IDialogflowService;
 import com.example.chatbotapiprueba.services.IntentHandler;
@@ -16,9 +15,7 @@ public class ComentarioTaiLoyClass implements IntentHandler {
     }
 
     @Override
-    public DialogflowResponse handleIntent(String id) throws GeneralSecurityException, IOException {
-        return dialogflowService.obtenerComentario(id);
+    public DialogflowResponse handleIntent(String id,String accion) throws GeneralSecurityException, IOException {
+        return dialogflowService.obtenerComentario(id,accion);
     }
-
-
 }
