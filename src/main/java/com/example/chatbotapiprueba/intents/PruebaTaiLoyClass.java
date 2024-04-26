@@ -2,7 +2,7 @@ package com.example.chatbotapiprueba.intents;
 
 import com.example.chatbotapiprueba.response.DialogflowResponse;
 import com.example.chatbotapiprueba.services.IDialogflowService;
-import com.example.chatbotapiprueba.services.IntentHandler;
+import com.example.chatbotapiprueba.handler.IntentHandler;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;

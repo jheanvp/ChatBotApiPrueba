@@ -56,9 +56,9 @@ public class DialogflowServiceImpl implements IDialogflowService {
     }
 
     @Override
-    public DialogflowResponse error() {
+    public DialogflowResponse error(String mensaje) {
         List<FulfillmentMessages> listFull = new ArrayList<>();
-        listFull.add(crearRespuesta("Esta Opcion no está Configurada, porfavor contactarse con ffierro@cajapiura.pe"));
+        listFull.add(crearRespuesta(mensaje));
         DialogflowResponse dialogFlowResponse = new DialogflowResponse();
         dialogFlowResponse.setFulfillmentMessages(listFull);
         return dialogFlowResponse;

@@ -7,7 +7,7 @@ import java.security.GeneralSecurityException;
 
 public interface IDialogflowService {
     DialogflowResponse obtenerEstado (String id,String accion) throws GeneralSecurityException, IOException;
-    DialogflowResponse error();
+    DialogflowResponse error(String mensaje);
     DialogflowResponse obtenerDiasTranscurridos(String id,String accion)throws GeneralSecurityException, IOException;
 
     DialogflowResponse obtenerComentario(String id,String accion) throws GeneralSecurityException, IOException;
