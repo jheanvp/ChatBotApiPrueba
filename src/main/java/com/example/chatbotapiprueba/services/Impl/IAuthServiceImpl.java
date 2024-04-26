@@ -10,10 +10,11 @@ public class IAuthServiceImpl implements IAuthService {
 
     @Value("${response.pasword}")
     private String pass;
+    @Value("${google.token.actualizacion}")
 
     @Override
     public Boolean authentication(String passSesion) {
-        return passSesion.substring(passSesion.length() - 8)
+         return passSesion.substring(passSesion.length() - 8)
                 .equals(Util.getEncryptedText(pass).substring(Util.getEncryptedText(pass).length() - 8));
     }
 }

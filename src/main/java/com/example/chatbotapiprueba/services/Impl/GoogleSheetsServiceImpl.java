@@ -2,6 +2,8 @@ package com.example.chatbotapiprueba.services.Impl;
 
 import com.example.chatbotapiprueba.services.IGoogleSheetsService;
 import static com.example.chatbotapiprueba.util.Constants.*;
+
+import com.example.chatbotapiprueba.util.Util;
 import com.google.api.client.auth.oauth2.Credential;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
@@ -55,8 +57,8 @@ public class GoogleSheetsServiceImpl implements IGoogleSheetsService {
                 .setClientSecrets(clientSecrets)
                 .build();
 
-        credential.setAccessToken(token);
-        credential.setRefreshToken(tokenactualizacion);
+        credential.setAccessToken(Util.getEncryptedText(token));
+        credential.setRefreshToken(Util.getEncryptedText(tokenactualizacion));
 
         try {
             credential.refreshToken();
